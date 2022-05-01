@@ -1,6 +1,36 @@
-# Welcome to [Astro](https://astro.build)
+# Welcome to [Astro](https://astro.build) + [Mitosis](https://github.com/BuilderIO/mitosis)
 
-[![Open in StackBlitz](https://developer.stackblitz.com/img/open_in_stackblitz.svg)](https://stackblitz.com/github/withastro/astro/tree/latest/examples/starter)
+## IMPORTANT:
+
+There is a caveat. Astro is using `vue@3.2.33`, but `@builder.io/mitosis` is using `vue-template-compiler@2.6.14`. In order to get the mitosis components to compile, you need to change the following file inside `/node_modules`:
+
+- `/node_modules/vue-template-compiler/index.js`:
+
+  ```diff
+   try {
+     var vueVersion = require('vue').version
+   } catch (e) {}
+
+   var packageName = require('./package.json').name
+   var packageVersion = require('./package.json').version
+  -if (vueVersion && vueVersion !== packageVersion) {
+  +if (false && vueVersion && vueVersion !== packageVersion) {
+     var vuePath = require.resolve('vue')
+     var packagePath = require.resolve('./package.json')
+     throw new Error(
+       '\n\nVue packages version mismatch:\n\n' +
+       '- vue@' + vueVersion + ' (' + vuePath + ')\n' +
+       '- ' + packageName + '@' + packageVersion + ' (' + packagePath + ')\n\n' +
+       'This may cause things to work incorrectly. Make sure to use the same version for both.\n' +
+       'If you are using vue-loader@>=10.0, simply update vue-template-compiler.\n' +
+       'If you are using vue-loader@<10.0 or vueify, re-installing vue-loader/vueify should bump ' + packageName + ' to the latest.\n'
+     )
+   }
+
+   module.exports = require('./build')
+  ```
+
+[![Open in StackBlitz](https://developer.stackblitz.com/img/open_in_stackblitz.svg)](https://stackblitz.com/github/arijs/astro-mitosis/tree/latest)
 
 > 🧑‍🚀 **Seasoned astronaut?** Delete this file. Have fun!
 
