@@ -30,6 +30,18 @@ There is a caveat. Astro is using `vue@3.2.33`, but `@builder.io/mitosis` is usi
    module.exports = require('./build')
   ```
 
+## Installation
+
+Run these commands:
+
+```
+$> npm install
+
+$> npm run mitosis
+
+$> npm start
+```
+
 [![Open in StackBlitz](https://developer.stackblitz.com/img/open_in_stackblitz.svg)](https://stackblitz.com/github/arijs/astro-mitosis/tree/latest)
 
 > 🧑‍🚀 **Seasoned astronaut?** Delete this file. Have fun!
