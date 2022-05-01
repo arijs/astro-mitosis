@@ -1,0 +1,110 @@
+---
+// import {Content as TourContent} from '../content/Tour.md';
+// import Logo from '../components/Logo.astro';
+import '../styles/global.css';
+// import '../styles/home.css';
+// import PreactCounter from '../components/PreactCounter.jsx';
+import ReactMyComp from '../react/my-component.jsx';
+import SolidMyComp from '../solid/my-component.jsx';
+import SvelteMyComp from '../svelte/my-component.svelte';
+import VueMyComp from '../vue/my-component.vue';
+
+// Component Script:
+// You can write any JavaScript/TypeScript that you'd like here.
+// It will run during the build, but never in the browser.
+// All variables are available to use in the HTML template below.
+let title = 'My Astro Site';
+
+// Full Astro Component Syntax:
+// https://docs.astro.build/core-concepts/astro-components/
+---
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width">
+	<title>{title}</title>
+
+	<link rel="icon" type="image/x-icon" href="/favicon.ico" />
+
+	<style>
+		header {
+			display: flex;
+			flex-direction: column;
+			gap: 1em;
+			max-width: min(100%, 68ch);
+		}
+		article {
+			padding-top: 2em;
+			line-height: 1.5;
+			display: flex;
+			flex-direction: column;
+			gap: 1em;
+			max-width: 70ch;
+		}
+		.banner {
+			text-align: center;
+			font-size: 1.2rem;
+			background: var(--color-light);
+			padding: 1em 1.5em;
+			padding-left: 0.75em;
+			border-radius: 4px;
+		}
+	</style>
+	<style is:global>
+		hr {
+			margin: 1em 0;
+		}
+		.instruction p {
+			margin: 0 0 1em;
+		}
+		.instruction pre {
+			padding: 1rem;
+			background: #ffffff10;
+			border: 1px solid #ffffff40;
+			border-radius: 0.5em;
+			box-shadow: 0.5em 0.5em 1em #ffffff40 inset;
+		}
+	</style>
+</head>
+<body>
+	<main>
+		<header>
+			<h1>Welcome to <a href="https://astro.build/">Astro</a> + <a href="https://github.com/BuilderIO/mitosis">Mitosis</a></h1>
+		</header>
+
+		<!--
+
+		You can also use imported framework components directly in your markup!
+		
+		Note: by default, these components are NOT interactive on the client.
+		The `client:visible` directive tells Astro to make it interactive.
+		
+		See https://docs.astro.build/core-concepts/component-hydration/ 
+
+		-->
+
+		<!-- <PreactCounter client:visible /> -->
+
+		<h2>React</h2>
+		<ReactMyComp client:visible />
+
+		<h2>Solid</h2>
+		<SolidMyComp client:visible />
+
+		<h2>Svelte</h2>
+		<SvelteMyComp client:visible />
+
+		<h2>Vue</h2>
+		<VueMyComp client:visible />
+
+		<hr />
+
+		<div class="instruction">
+			<p>
+				To compile the mitosis components, use the following command:
+			</p>
+			<pre>npm run mitosis</pre>
+		</div>
+	</main>
+</body>
+</html>
