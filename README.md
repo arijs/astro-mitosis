@@ -35,7 +35,14 @@ There is a caveat. Astro is using `vue@3.2.33`, but `@builder.io/mitosis` is usi
 Run these commands:
 
 ```
-$> npm install
+// Since npm >= v7.0, you need to use the argument below because
+// there are conflicts between astro and mitosis dependencies
+
+$> npm install --legacy-peer-deps
+
+    // If npm < v7.0, just omit the flag
+    $> npm install
+
 
 $> npm run mitosis
 
