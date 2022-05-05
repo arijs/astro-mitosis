@@ -1,7 +1,7 @@
-import { join as pathJoin } from 'path';
-import { fileURLToPath } from 'url';
-import dirFiles from 'dir-files';
-import { openDirArrayPromise } from '@arijs/frontend/server/utils/open-dir';
+import { join as pathJoin } from 'path'
+import { fileURLToPath } from 'url'
+import dirFiles from 'dir-files'
+import { openDirArrayPromise } from '@arijs/frontend/server/utils/open-dir'
 import {
 	tryOpenReadPromise,
 	tryReadStreamEnd,
@@ -11,14 +11,14 @@ import {
 import {
 	parseJsx,
 	targets,
-} from '@builder.io/mitosis';
+} from '@builder.io/mitosis'
 
-const reDirSep = /[\\\/]+/g;
+const reDirSep = /[\\\/]+/g
+const fileOpt = { encoding: 'utf8' }
 
-const dirBase = fileURLToPath(new URL('../src', import.meta.url)).replace(/\/+$/,'');
+const dirBase = fileURLToPath(new URL('../src', import.meta.url)).replace(/\/+$/,'')
 const dirInput = pathJoin(dirBase, 'mitosis')
-
-findSourceFiles(dirInput, fnProcessItemOutput({
+const generators = createGenerators({
 	react: {
 		// stylesType?: 'emotion' | 'styled-components' | 'styled-jsx' | 'react-native';
 		stylesType: 'styled-jsx',
@@ -32,10 +32,19 @@ findSourceFiles(dirInput, fnProcessItemOutput({
 	vue: {},
 	solid: {},
 	svelte: {},
-})).then(finished => {
-	console.log(`${finished.length} file(s) processed`)
-	finished.forEach(({dir: { sub }, name}) => console.log(pathJoin(sub, name)))
 })
+
+findSourceFiles(dirInput, fnProcessItemOutput(generators)).then(finished => {
+	console.log(`${finished.length} file(s) processed`)
+	// finished.forEach(({dir: { sub }, name}) => console.log(pathJoin(sub, name)))
+})
+
+function createGenerators(config) {
+	return Object.entries(config).map(([format, formatConfig]) => {
+		const generator = targets[format](formatConfig)
+		return { format, generator }
+	})
+}
 
 function findSourceFiles(srcPath, processItem) {
 	return new Promise((resolve, reject) => {
@@ -43,10 +52,7 @@ function findSourceFiles(srcPath, processItem) {
 		var pluginOpt = {};
 
 		dirFiles({
-			result: {
-				promises: [],
-				finished: [],
-			},
+			result: [],
 			path: srcPath,
 			plugins: [
 				dfp.skip(function skipSpecial(file) {
@@ -65,46 +71,47 @@ function findSourceFiles(srcPath, processItem) {
 					return !file.name || file.stat.isDirectory();
 				}),
 				function (file) {
-					// console.log('~ '+pathJoin(file.dir.sub, file.name));
-					const { promises, finished } = this.result
-					const prom = processItem(file)
-					promises.push(prom)
-					prom.then(() => finished.push(file))
+					this.result.push(processItem(file).then(() => file))
 				}
 			],
-			callback: function(err, { promises, finished }) {
+			callback: function(err, promises) {
 				return err
 					? reject(err)
-					: resolve(Promise.all(promises).then(() => finished));
+					: resolve(Promise.all(promises));
 			}
 		});
 	});
 }
 
-const fileOpt = { encoding: 'utf8' }
-function fnProcessItemOutput(config) {
-	return async function processItem({dir: {root, sub}, name}) {
-		console.error(`-> will compile:`, [sub, name])
-		const readStream = await tryOpenReadPromise(pathJoin(root, sub, name), fileOpt)
-		let data = ''
-		readStream.on('data', (chunk) => data += chunk)
-		await tryReadStreamEnd(readStream)
-		const component = parseJsx(data)
-		await Promise.all(Object.entries(config).map(async ([k, v]) => {
-			console.error(`  -> write`, [k])
-			const dirSub = pathJoin(k, sub)
-			// console.error(`  ->   dirSub`, [dirSub])
-			await openDirArrayPromise(dirBase, dirSub.split(reDirSep))
-			const generator = targets[k]
-			const outputPath = pathJoin(dirBase, dirSub, replaceExt(name, k))
-			const output = generator(v)({
-				component,
-				path: outputPath
-			})
-			const writeStream = await tryOpenWritePromise(outputPath, fileOpt)
-			await tryWriteStreamEnd(writeStream, output)
-		}))
+function fnProcessItemOutput(generators) {
+	return async function processItem(file) {
+		const component = await readMitosisFromFile(file)
+		await Promise.all(generators.map(gen =>
+			writeFormatToFile(file, gen, component)
+		))
 	}
+}
+
+async function readMitosisFromFile({dir: {root, sub}, name}) {
+	console.error(pathJoin(sub, name))
+	const readStream = await tryOpenReadPromise(pathJoin(root, sub, name), fileOpt)
+	let data = ''
+	readStream.on('data', (chunk) => data += chunk)
+	await tryReadStreamEnd(readStream)
+	return parseJsx(data)
+}
+
+async function writeFormatToFile({dir: {sub}, name}, { format, generator }, component) {
+	// console.error(`  ->`, format)
+	const dirSub = pathJoin(format, sub)
+	await openDirArrayPromise(dirBase, dirSub.split(reDirSep))
+	const outputPath = pathJoin(dirBase, dirSub, replaceExt(name, format))
+	const output = generator({
+		component,
+		path: outputPath
+	})
+	const writeStream = await tryOpenWritePromise(outputPath, fileOpt)
+	await tryWriteStreamEnd(writeStream, output)
 }
 
 const reExt = /(\.lite)?(\.\w+)?$/i
